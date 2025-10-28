@@ -6,9 +6,7 @@
 // - view<...>(fn) iterates entities having given components and passes references
 // - Up to 64 distinct component types (change MAX_COMPONENTS if you need more)
 
-#ifndef MINIMAL_ECS_HPP
-#define MINIMAL_ECS_HPP
-
+#pragma once
 #include <cstdint>
 #include <bitset>
 #include <vector>

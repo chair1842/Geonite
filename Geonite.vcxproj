@@ -22,6 +22,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="components.hpp" />
     <ClInclude Include="ecs.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
