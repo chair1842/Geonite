@@ -20,10 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="player_systems.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="components.hpp" />
     <ClInclude Include="ecs.hpp" />
+    <ClInclude Include="events.hpp" />
+    <ClInclude Include="systems.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

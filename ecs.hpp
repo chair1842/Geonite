@@ -18,7 +18,7 @@
 #include <functional>
 #include <stdexcept>
 
-namespace minimal_ecs {
+namespace ecs {
 
     using Entity = std::uint32_t;
     static constexpr Entity INVALID_ENTITY = static_cast<Entity>(-1);
@@ -170,9 +170,72 @@ namespace minimal_ecs {
         }
     };
 
-} // namespace minimal_ecs
+    // --- Event Bus -----------------------------------------------------------
+    class EventBus {
+    public:
+        template<typename EventType>
+        void emit(const EventType& event) {
+            auto& queue = getQueue<EventType>();
+            queue.push_back(event);
+        }
 
-#endif // MINIMAL_ECS_HPP
+        template<typename EventType>
+        void subscribe(std::function<void(const EventType&)> listener) {
+            auto& listeners = getListeners<EventType>();
+            listeners.push_back(listener);
+        }
+
+        template<typename EventType>
+        void dispatch() {
+            auto& queue = getQueue<EventType>();
+            auto& listeners = getListeners<EventType>();
+
+            for (auto& event : queue) {
+                for (auto& listener : listeners) {
+                    listener(event);
+                }
+            }
+
+            queue.clear(); // remove processed events
+        }
+
+    private:
+        // storage per event type
+        template<typename EventType>
+        std::vector<EventType>& getQueue() {
+            std::type_index id = typeid(EventType);
+            if (!queues.count(id))
+                queues[id] = std::make_shared<QueueHolder<EventType>>();
+            return static_cast<QueueHolder<EventType>*>(queues[id].get())->events;
+        }
+
+        template<typename EventType>
+        std::vector<std::function<void(const EventType&)>>& getListeners() {
+            std::type_index id = typeid(EventType);
+            if (!listeners.count(id))
+                listeners[id] = std::make_shared<ListenerHolder<EventType>>();
+            return static_cast<ListenerHolder<EventType>*>(listeners[id].get())->funcs;
+        }
+
+        struct IQueueHolder { virtual ~IQueueHolder() = default; };
+        struct IListenerHolder { virtual ~IListenerHolder() = default; };
+
+        template<typename T>
+        struct QueueHolder : IQueueHolder {
+            std::vector<T> events;
+        };
+
+        template<typename T>
+        struct ListenerHolder : IListenerHolder {
+            std::vector<std::function<void(const T&)>> funcs;
+        };
+
+        std::unordered_map<std::type_index, std::shared_ptr<IQueueHolder>> queues;
+        std::unordered_map<std::type_index, std::shared_ptr<IListenerHolder>> listeners;
+    };
+
+
+} // namespace minimal_ecs
 
 /*
 Usage example (also included in header comments):
