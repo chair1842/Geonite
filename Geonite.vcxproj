@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="movement_system.cpp" />
+    <ClCompile Include="physics_systems.cpp" />
     <ClCompile Include="player_systems.cpp" />
     <ClCompile Include="render_systems.cpp" />
   </ItemGroup>

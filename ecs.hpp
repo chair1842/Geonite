@@ -180,14 +180,14 @@ namespace ecs {
 
         template<typename EventType>
         std::vector<EventType>& getQueue() {
-            auto ti = typeid(EventType);
+            std::type_index ti = typeid(EventType);
             if (!queues.count(ti)) queues[ti] = std::make_shared<QueueHolder<EventType>>();
             return static_cast<QueueHolder<EventType>*>(queues[ti].get())->events;
         }
 
         template<typename EventType>
         std::vector<std::function<void(const EventType&)>>& getListeners() {
-            auto ti = typeid(EventType);
+            std::type_index ti = typeid(EventType);
             if (!listeners.count(ti)) listeners[ti] = std::make_shared<ListenerHolder<EventType>>();
             return static_cast<ListenerHolder<EventType>*>(listeners[ti].get())->funcs;
         }

@@ -22,6 +22,9 @@
     <Filter Include="Header Files\helpers">
       <UniqueIdentifier>{3fe439aa-b514-4bca-8dbf-e47a29f2b5fb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\systems\physics">
+      <UniqueIdentifier>{9623b448-f460-41a2-8991-976aae888655}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -35,6 +38,9 @@
     </ClCompile>
     <ClCompile Include="movement_system.cpp">
       <Filter>Source Files\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="physics_systems.cpp">
+      <Filter>Source Files\systems\physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

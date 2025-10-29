@@ -8,3 +8,5 @@ struct PlayerTag {};
 struct NPCTag {};
 struct SquareDisplay { float size; float r, g, b; };
 struct SquareCollider { float size; };
+struct RectangleDisplay { float width; float height; float r, g, b; };
+struct RectangleCollider { float width; float height; };
