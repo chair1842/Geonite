@@ -34,11 +34,11 @@ int main(int argc, char* argv[]) {
 	// Entity Creation
 	// Player
 	ecs::Entity player = registry.create();
-	registry.add<Position>(player, Position{ 320.0f, 240.0f });
+	registry.add<Position>(player, Position{ 320.0f - 20, 240.0f - 20});
 	registry.add<Velocity>(player, Velocity{ 0.0f, 0.0f });
 	registry.add<Input>(player, Input{ false, false, false, false, false, false, false, false });
 	registry.add<PlayerTag>(player, PlayerTag{});
-	registry.add<SquareDisplay>(player, SquareDisplay{ 32.0f, 128, 128, 255 });
+	registry.add<SquareDisplay>(player, SquareDisplay{ 40.0f, 128, 128, 255 });
 
 	// --- Fixed timestep setup ---
 	constexpr float FIXED_DT = 1.0f / 60.0f;  // 60 updates per second

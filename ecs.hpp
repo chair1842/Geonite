@@ -1,10 +1,6 @@
 // minimal_ecs.hpp
 // A single-header minimal ECS suitable for small projects and learning.
-// - Entity: uint32 id
-// - Components: plain structs
-// - Add/remove/get components via Registry
-// - view<...>(fn) iterates entities having given components and passes references
-// - Up to 64 distinct component types (change MAX_COMPONENTS if you need more)
+// Includes a minimal EventBus for event-driven systems.
 
 #pragma once
 #include <cstdint>
@@ -25,7 +21,7 @@ namespace ecs {
     static constexpr std::size_t MAX_COMPONENTS = 64;
     using Signature = std::bitset<MAX_COMPONENTS>;
 
-    // --- component type id generation -------------------------------------------------
+    // --- component type id generation ---
     inline std::size_t next_component_type_id() {
         static std::size_t id = 0;
         return id++;
@@ -37,7 +33,7 @@ namespace ecs {
         return id;
     }
 
-    // --- component storage interface --------------------------------------------------
+    // --- component storage ---
     struct IComponentArray {
         virtual ~IComponentArray() = default;
         virtual void remove(Entity e) = 0;
@@ -47,19 +43,17 @@ namespace ecs {
     template<typename T>
     struct ComponentArray : IComponentArray {
         std::unordered_map<Entity, T> data;
-
         void insert(Entity e, T component) { data.emplace(e, std::move(component)); }
         void remove(Entity e) override { data.erase(e); }
         T& get(Entity e) { return data.at(e); }
         bool has(Entity e) const override { return data.find(e) != data.end(); }
     };
 
-    // --- Registry --------------------------------------------------------------------
+    // --- Registry ---
     class Registry {
     public:
         Registry() : next_entity(0) {}
 
-        // Entities
         Entity create() {
             if (!free_ids.empty()) {
                 Entity e = free_ids.back(); free_ids.pop_back();
@@ -74,17 +68,13 @@ namespace ecs {
         }
 
         void destroy(Entity e) {
-            if (alive.find(e) == alive.end()) return;
-            // remove components
-            for (auto& kv : component_arrays) {
-                kv.second->remove(e);
-            }
+            if (!alive.count(e)) return;
+            for (auto& kv : component_arrays) kv.second->remove(e);
             signatures[e].reset();
             alive.erase(e);
             free_ids.push_back(e);
         }
 
-        // Components
         template<typename T>
         void add(Entity e, T component) {
             auto id = component_type_id<T>();
@@ -112,11 +102,10 @@ namespace ecs {
         template<typename T>
         T& get(Entity e) {
             auto it = component_arrays.find(typeid(T));
-            if (it == component_arrays.end()) throw std::runtime_error("Component type not registered");
+            if (it == component_arrays.end()) throw std::runtime_error("Component not registered");
             return static_cast<ComponentArray<T>*>(it->second.get())->get(e);
         }
 
-        // View: iterate all entities that have all component types Ts
         template<typename... Ts, typename Fn>
         void view(Fn fn) {
             static_assert(sizeof...(Ts) > 0, "view requires at least one component type");
@@ -124,17 +113,9 @@ namespace ecs {
             (void)std::initializer_list<int>{(want.set(component_type_id<Ts>()), 0)...};
 
             for (Entity e : alive) {
-                if ((signatures[e] & want) == want) {
-                    // call fn with references to each component
-                    call_with_components<Ts...>(e, fn);
-                }
+                if ((signatures[e] & want) == want)
+                    fn(get<Ts>(e)...);
             }
-        }
-
-        // simple iteration over entities
-        template<typename Fn>
-        void each_entity(Fn fn) {
-            for (Entity e : alive) fn(e);
         }
 
     private:
@@ -147,123 +128,69 @@ namespace ecs {
         template<typename T>
         void ensure_component_array(std::size_t id) {
             std::type_index ti = typeid(T);
-            if (component_arrays.find(ti) == component_arrays.end()) {
+            if (!component_arrays.count(ti)) {
                 component_arrays[ti] = std::make_unique<ComponentArray<T>>();
-                // if someone requests > MAX_COMPONENTS types, it's a user error
                 if (id >= MAX_COMPONENTS) throw std::runtime_error("Exceeded MAX_COMPONENTS");
             }
         }
-
-        template<typename T>
-        void ensure_component_array() { ensure_component_array<T>(component_type_id<T>()); }
-
-        // helper to call a function with component references
-        template<typename... Ts, typename Fn, std::size_t... I>
-        void call_with_components_impl(Entity e, Fn& fn, std::index_sequence<I...>) {
-            fn(std::declval<Ts&>()...); // not used; helps deduce types
-        }
-
-        template<typename... Ts, typename Fn>
-        void call_with_components(Entity e, Fn& fn) {
-            // fetch references in the correct order and invoke fn
-            fn(get<Ts>(e)...);
-        }
     };
 
-    // --- Event Bus -----------------------------------------------------------
+    // --- Event Bus ---
     class EventBus {
     public:
         template<typename EventType>
         void emit(const EventType& event) {
-            auto& queue = getQueue<EventType>();
-            queue.push_back(event);
+            auto& q = getQueue<EventType>();
+            q.push_back(event);
         }
 
         template<typename EventType>
         void subscribe(std::function<void(const EventType&)> listener) {
-            auto& listeners = getListeners<EventType>();
-            listeners.push_back(listener);
+            auto& ls = getListeners<EventType>();
+            ls.push_back(listener);
         }
 
         template<typename EventType>
-        void dispatch() {
-            auto& queue = getQueue<EventType>();
-            auto& listeners = getListeners<EventType>();
+        void dispatchAll() {
+            auto& q = getQueue<EventType>();
+            auto& ls = getListeners<EventType>();
+            for (auto& e : q) for (auto& fn : ls) fn(e);
+            q.clear();
+        }
 
-            for (auto& event : queue) {
-                for (auto& listener : listeners) {
-                    listener(event);
-                }
-            }
+        void dispatchAllEvents() {
+            for (auto& [_, dispatcher] : dispatchers)
+                dispatcher();
+        }
 
-            queue.clear(); // remove processed events
+        template<typename EventType>
+        void registerEvent() {
+            dispatchers[typeid(EventType)] = [this]() { dispatchAll<EventType>(); };
         }
 
     private:
-        // storage per event type
+        template<typename EventType>
+        struct QueueHolder { std::vector<EventType> events; };
+        template<typename EventType>
+        struct ListenerHolder { std::vector<std::function<void(const EventType&)>> funcs; };
+
+        std::unordered_map<std::type_index, std::shared_ptr<void>> queues;
+        std::unordered_map<std::type_index, std::shared_ptr<void>> listeners;
+        std::unordered_map<std::type_index, std::function<void()>> dispatchers;
+
         template<typename EventType>
         std::vector<EventType>& getQueue() {
-            std::type_index id = typeid(EventType);
-            if (!queues.count(id))
-                queues[id] = std::make_shared<QueueHolder<EventType>>();
-            return static_cast<QueueHolder<EventType>*>(queues[id].get())->events;
+            auto ti = typeid(EventType);
+            if (!queues.count(ti)) queues[ti] = std::make_shared<QueueHolder<EventType>>();
+            return static_cast<QueueHolder<EventType>*>(queues[ti].get())->events;
         }
 
         template<typename EventType>
         std::vector<std::function<void(const EventType&)>>& getListeners() {
-            std::type_index id = typeid(EventType);
-            if (!listeners.count(id))
-                listeners[id] = std::make_shared<ListenerHolder<EventType>>();
-            return static_cast<ListenerHolder<EventType>*>(listeners[id].get())->funcs;
+            auto ti = typeid(EventType);
+            if (!listeners.count(ti)) listeners[ti] = std::make_shared<ListenerHolder<EventType>>();
+            return static_cast<ListenerHolder<EventType>*>(listeners[ti].get())->funcs;
         }
-
-        struct IQueueHolder { virtual ~IQueueHolder() = default; };
-        struct IListenerHolder { virtual ~IListenerHolder() = default; };
-
-        template<typename T>
-        struct QueueHolder : IQueueHolder {
-            std::vector<T> events;
-        };
-
-        template<typename T>
-        struct ListenerHolder : IListenerHolder {
-            std::vector<std::function<void(const T&)>> funcs;
-        };
-
-        std::unordered_map<std::type_index, std::shared_ptr<IQueueHolder>> queues;
-        std::unordered_map<std::type_index, std::shared_ptr<IListenerHolder>> listeners;
     };
 
-
-} // namespace minimal_ecs
-
-/*
-Usage example (also included in header comments):
-
-#include "ecs.hpp"
-#include <iostream>
-
-struct Position { float x,y; };
-struct Velocity { float x,y; };
-
-int main() {
-    using namespace minimal_ecs;
-    Registry registry;
-
-    Entity e = registry.create();
-    registry.add<Position>(e, Position{0.f,0.f});
-    registry.add<Velocity>(e, Velocity{1.f,2.f});
-
-    registry.view<Position,Velocity>([&](Position &p, Velocity &v){
-        p.x += v.x; p.y += v.y;
-    });
-
-    auto &p = registry.get<Position>(e);
-    std::cout << p.x << ", " << p.y << "\n";
-}
-
-Notes:
-- This implementation favors simplicity over maximum performance.
-- To scale, swap ComponentArray to use contiguous dense storage (sparse set) and prefer iterating the smallest component array in view.
-- Increase MAX_COMPONENTS if you need more component types.
-*/
+} // namespace ecs
