@@ -19,6 +19,9 @@
     <Filter Include="Source Files\systems">
       <UniqueIdentifier>{5b1afa00-f5a4-4c5b-853f-b83458d50fde}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\helpers">
+      <UniqueIdentifier>{3fe439aa-b514-4bca-8dbf-e47a29f2b5fb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -40,6 +43,9 @@
     </ClInclude>
     <ClInclude Include="events.hpp">
       <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="lerp.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
