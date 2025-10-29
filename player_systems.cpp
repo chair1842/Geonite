@@ -79,3 +79,34 @@ void PlayerInputSystem(ecs::Registry& registry, SDL_Event& event) {
         }
         });
 }
+
+void PlayerMovementSystem(ecs::Registry& registry) {
+	const float normal_speed = 2.0f;
+	const float sprint_multiplier = 1.5f;
+	registry.view<PlayerTag, Position, Velocity, Input>([&](PlayerTag&, Position& pos, Velocity& vel, const Input& input) {
+		vel.x = 0.0f;
+		vel.y = 0.0f;
+		float speed = normal_speed;
+		if (input.sprint) {
+			speed *= sprint_multiplier;
+		}
+		if (input.up) {
+			vel.y = -speed;
+		}
+		if (input.down) {
+			vel.y = speed;
+		}
+		if (input.left) {
+			vel.x = -speed;
+		}
+		if (input.right) {
+			vel.x = speed;
+		}
+		});
+}
+
+
+void update_player_systems(ecs::Registry& registry, SDL_Event& event) {
+	PlayerMovementSystem(registry);
+	// PlayerInteractionSystem(registry); // Placeholder for future interaction logic
+}

@@ -20,7 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="movement_system.cpp" />
     <ClCompile Include="player_systems.cpp" />
+    <ClCompile Include="render_systems.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="components.hpp" />

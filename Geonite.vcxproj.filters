@@ -30,6 +30,12 @@
     <ClCompile Include="player_systems.cpp">
       <Filter>Source Files\systems</Filter>
     </ClCompile>
+    <ClCompile Include="render_systems.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="movement_system.cpp">
+      <Filter>Source Files\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="components.hpp">
