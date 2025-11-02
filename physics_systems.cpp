@@ -48,12 +48,12 @@ void AABBCollisionSystem(ecs::Registry& registry, ecs::EventBus& evbus) {
     std::vector<std::pair<Position*, AABB>> colliders;
 
     // Squares
-    registry.view<Position, SquareCollider>([&](Position& pos, SquareCollider& col) {
+    registry.view<Position, SquareCollider, Solid>([&](Position& pos, SquareCollider& col, Solid&) {
         colliders.push_back({ &pos, getAABB(pos, col) });
         });
 
     // Rectangles
-    registry.view<Position, RectangleCollider>([&](Position& pos, RectangleCollider& col) {
+    registry.view<Position, RectangleCollider, Solid>([&](Position& pos, RectangleCollider& col, Solid&) {
         colliders.push_back({ &pos, getAABB(pos, col) });
         });
 

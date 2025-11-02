@@ -2,7 +2,7 @@
 #include "ecs.hpp"
 #include "components.hpp"
 #include "events.hpp"
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 void MovementSystem(ecs::Registry& registry, float delta_time);
 

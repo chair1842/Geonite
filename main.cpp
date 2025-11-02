@@ -1,7 +1,7 @@
 #include <iostream>
 #include <chrono>
 #include <print>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include "systems.hpp"  // <- where updateMovement() etc. live
 #include "events.hpp"
 
@@ -11,20 +11,24 @@ void create_initial_entities(ecs::Registry& registry) {
 	registry.add<Velocity>(player, Velocity{ 0.0f, 0.0f });
 	registry.add<Input>(player, Input{ false, false, false, false, false, false, false, false });
 	registry.add<PlayerTag>(player, PlayerTag{});
-	registry.add<SquareDisplay>(player, SquareDisplay{ 40.0f, 128, 128, 255 });
+	registry.add<SquareDisplay>(player, SquareDisplay{ 40.0f, 128, 128, 255, 255 });
 	registry.add<SquareCollider>(player, SquareCollider{ 40.0f });
+	registry.add<Movable>(player, Movable{});
+	registry.add<Solid>(player, Solid{});
 	// Unmovable Box
 	ecs::Entity box1 = registry.create();
 	registry.add<Position>(box1, Position{ 200.0f, 200.0f });
-	registry.add<SquareDisplay>(box1, SquareDisplay{ 80.0f, 255, 0, 0 });
+	registry.add<SquareDisplay>(box1, SquareDisplay{ 80.0f, 255, 0, 0, 255});
 	registry.add<SquareCollider>(box1, SquareCollider{ 80.0f });
+	registry.add<Solid>(box1, Solid{});
 	ecs::Entity box2 = registry.create();
 	registry.add<Position>(box2, Position{ 400.0f, 300.0f });
-	registry.add<SquareDisplay>(box2, SquareDisplay{ 100.0f, 0, 255, 0 });
+	registry.add<SquareDisplay>(box2, SquareDisplay{ 100.0f, 0, 255, 0, 255 });
 	registry.add<SquareCollider>(box2, SquareCollider{ 100.0f });
+	registry.add<Solid>(box2, Solid{});
 	ecs::Entity box3 = registry.create();
 	registry.add<Position>(box3, Position{ 150.0f, 350.0f });
-	registry.add<RectangleDisplay>(box3, RectangleDisplay{ 120.0f, 60.0f, 0, 0, 255 });
+	registry.add<RectangleDisplay>(box3, RectangleDisplay{ 120.0f, 60.0f, 0, 0, 255, 0 });
 	registry.add<RectangleCollider>(box3, RectangleCollider{ 120.0f, 60.0f });
 }
 
@@ -68,15 +72,14 @@ int main(int argc, char* argv[]) {
 	}
 
 	SDL_Window* win = SDL_CreateWindow("Geonite",
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		640, 480, SDL_WINDOW_SHOWN);
+		640, 480, SDL_WINDOW_FULLSCREEN);
 	if (win == nullptr) {
 		std::println("SDL_CreateWindow Error: {}", SDL_GetError());
 		SDL_Quit();
 		return 1;
 	}
 
-	SDL_Renderer* renderer = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED);
+	SDL_Renderer* renderer = SDL_CreateRenderer(win, NULL);
 	if (!renderer) {
 		std::println("SDL_CreateRenderer Error: {}", SDL_GetError());
 		SDL_DestroyWindow(win);
@@ -104,7 +107,7 @@ int main(int argc, char* argv[]) {
 		// --- Handle SDL Events ---
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT)
+			if (event.type == SDL_EVENT_QUIT)
 				running = false;
 			PlayerInputSystem(registry, event, evbus);
 		}

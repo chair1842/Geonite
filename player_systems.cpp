@@ -5,21 +5,21 @@
 void PlayerInputSystem(ecs::Registry& registry, SDL_Event& event, ecs::EventBus& evbus) {
     registry.view<PlayerTag, Input>([&event,&evbus](PlayerTag&, Input& input) {
         switch (event.type) {
-        case SDL_KEYDOWN:
-            switch (event.key.keysym.sym) {
-            case SDLK_w:
+        case SDL_EVENT_KEY_DOWN:
+            switch (event.key.key) {
+            case SDLK_W:
             case SDLK_UP:
                 input.up = true;
                 break;
-            case SDLK_s:
+            case SDLK_S:
             case SDLK_DOWN:
                 input.down = true;
                 break;
-            case SDLK_a:
+            case SDLK_A:
             case SDLK_LEFT:
                 input.left = true;
                 break;
-            case SDLK_d:
+            case SDLK_D:
             case SDLK_RIGHT:
                 input.right = true;
                 break;
@@ -28,11 +28,11 @@ void PlayerInputSystem(ecs::Registry& registry, SDL_Event& event, ecs::EventBus&
 				evbus.emit(QuitEvent{});
                 break;
             case SDLK_RETURN:
-            case SDLK_e:
+            case SDLK_E:
             case SDLK_SPACE:
                 input.action = true;
                 break;
-            case SDLK_j:
+            case SDLK_J:
                 input.attack = true;
                 break;
             case SDLK_LSHIFT:
@@ -43,21 +43,21 @@ void PlayerInputSystem(ecs::Registry& registry, SDL_Event& event, ecs::EventBus&
             }
             break;
 
-        case SDL_KEYUP:
-            switch (event.key.keysym.sym) {
-            case SDLK_w:
+        case SDL_EVENT_KEY_UP:
+            switch (event.key.key) {
+            case SDLK_W:
             case SDLK_UP:
                 input.up = false;
                 break;
-            case SDLK_s:
+            case SDLK_S:
             case SDLK_DOWN:
                 input.down = false;
                 break;
-            case SDLK_a:
+            case SDLK_A:
             case SDLK_LEFT:
                 input.left = false;
                 break;
-            case SDLK_d:
+            case SDLK_D:
             case SDLK_RIGHT:
                 input.right = false;
                 break;
@@ -65,11 +65,11 @@ void PlayerInputSystem(ecs::Registry& registry, SDL_Event& event, ecs::EventBus&
                 input.quit = false;
                 break;
             case SDLK_RETURN:
-            case SDLK_e:
+            case SDLK_E:
             case SDLK_SPACE:
                 input.action = false;
                 break;
-            case SDLK_j:
+            case SDLK_J:
                 input.attack = false;
                 break;
             case SDLK_LSHIFT:
