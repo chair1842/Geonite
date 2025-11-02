@@ -18,17 +18,17 @@ void create_initial_entities(ecs::Registry& registry) {
 	// Unmovable Box
 	ecs::Entity box1 = registry.create();
 	registry.add<Position>(box1, Position{ 200.0f, 200.0f });
-	registry.add<SquareDisplay>(box1, SquareDisplay{ 80.0f, 255, 0, 0, 255});
+	registry.add<SquareDisplay>(box1, SquareDisplay{ 80.0f, 255, 0, 0});
 	registry.add<SquareCollider>(box1, SquareCollider{ 80.0f });
 	registry.add<Solid>(box1, Solid{});
 	ecs::Entity box2 = registry.create();
 	registry.add<Position>(box2, Position{ 400.0f, 300.0f });
-	registry.add<SquareDisplay>(box2, SquareDisplay{ 100.0f, 0, 255, 0, 255 });
+	registry.add<SquareDisplay>(box2, SquareDisplay{ 100.0f, 0, 255, 0});
 	registry.add<SquareCollider>(box2, SquareCollider{ 100.0f });
 	registry.add<Solid>(box2, Solid{});
 	ecs::Entity box3 = registry.create();
 	registry.add<Position>(box3, Position{ 150.0f, 350.0f });
-	registry.add<RectangleDisplay>(box3, RectangleDisplay{ 120.0f, 60.0f, 0, 0, 255, 0 });
+	registry.add<RectangleDisplay>(box3, RectangleDisplay{ 120.0f, 60.0f, 0, 0, 255, 128 });
 	registry.add<RectangleCollider>(box3, RectangleCollider{ 120.0f, 60.0f });
 }
 
@@ -66,13 +66,13 @@ void quit(SDL_Renderer* renderer, SDL_Window* window) {
 }
 
 int main(int argc, char* argv[]) {
-	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		std::println("SDL_Init Error: {}", SDL_GetError());
 		return 1;
 	}
 
 	SDL_Window* win = SDL_CreateWindow("Geonite",
-		640, 480, SDL_WINDOW_FULLSCREEN);
+		640, 480, 0);
 	if (win == nullptr) {
 		std::println("SDL_CreateWindow Error: {}", SDL_GetError());
 		SDL_Quit();
@@ -80,6 +80,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	SDL_Renderer* renderer = SDL_CreateRenderer(win, NULL);
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	if (!renderer) {
 		std::println("SDL_CreateRenderer Error: {}", SDL_GetError());
 		SDL_DestroyWindow(win);
